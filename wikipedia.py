@@ -25,7 +25,8 @@ def get_first_link(cur_url):
             el = el[el.find('>') + 1:]
             el = el[:len(el) - 4]
             el = el[:el.rfind('>') + 1]
-        if (len(el) > 2 and el[1] == 'i' and el[-2] == 'i') or el.find('not-searchable') > -1 or el.find('role="note"') > -1 or el.find('class="image"') > -1:
+        if (len(el) > 2 and el[1] == 'i' and el[-2] == 'i') or el.find('not-searchable') > -1 or el.find(
+                'role="note"') > -1 or el.find('class="image"') > -1:
             continue
         el = el.replace('<a ', '<a>')
         el = el.replace('/a>', '<a>')
@@ -35,7 +36,7 @@ def get_first_link(cur_url):
         for s in els:
             while len(s) and (s[-1] == '<' or s[-1] == '>'):
                 s = s[:len(s) - 1]
-            if s.find('href=') > -1 and s[-1] != ']':
+            if s.find('href=') > -1 and s.find(']') == -1:
                 if balance == 0:
                     s = s[s.find('href=') + 6:]
                     next_url = s[:s.find('"')]
@@ -56,22 +57,38 @@ def get_first_link(cur_url):
 
 cnt_ph = 0
 iterations = 100
+is_loop = dict()
 for i in range(iterations):
-    cur_url = start_url
+    path = []
     visited = set()
+    cur_url = start_url
     print(cur_url)
     while cur_url != final_url:
+        if cur_url == '':
+            print('no link :(')
+            for url in path:
+                is_loop[url] = 1
+        if cur_url in is_loop:
+            for url in path:
+                is_loop[url] = is_loop[cur_url]
+            cnt_ph += is_loop[cur_url] ^ 1
+            break
         title, next_url = get_first_link(cur_url)
         print(next_url)
         if title in visited:
             print('loop :(')
+            for url in path:
+                is_loop[url] = 1
             break
         visited.add(title)
-        # time.sleep(2.5)
+        path.append(next_url)
+        # time.sleep(0.5)
         cur_url = next_url
     if cur_url == final_url:
-        # print('Philosophy')
+        print('Philosophy')
         print('success!')
         cnt_ph += 1
+        for url in path:
+            is_loop[url] = 0
 
 print('accuracy:', cnt_ph / iterations)
